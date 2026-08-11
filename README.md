@@ -38,4 +38,12 @@ direct-upload SkillHub ZIP with:
 
 Tagged releases publish `lexmount-webfetch-v<VERSION>-skillhub.zip`,
 `SHA256SUMS`, and exactly two raw binaries: macOS ARM64 and Windows x64. Linux
-and macOS Intel are not release platforms.
+and macOS Intel are not release platforms. The macOS binary is signed with a
+Developer ID Application certificate, hardened-runtime enabled, and accepted
+by Apple's notarization service before it is published.
+
+The release workflow reads the signing certificate and notarization credentials
+from the `macos-release` GitHub environment. It requires
+`MACOS_DEVELOPER_ID_APPLICATION_P12_BASE64`,
+`MACOS_DEVELOPER_ID_P12_PASSWORD`, `APPLE_NOTARY_APPLE_ID`,
+`APPLE_NOTARY_TEAM_ID`, and `APPLE_NOTARY_APP_PASSWORD`.
