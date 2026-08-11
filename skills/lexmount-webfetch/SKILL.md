@@ -5,7 +5,7 @@ description: Use Lexmount WebFetch for lightweight public-page extraction and re
 
 # Lexmount WebFetch
 
-Use `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli` on macOS or `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli.exe` on Windows. Release binaries support macOS ARM64, macOS Intel x64, and Windows x64. The examples abbreviate that path as `webfetch-cli`.
+Use `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli` on macOS or `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli.exe` on Windows. Release binaries support macOS ARM64 and Windows x64. The examples abbreviate that path as `webfetch-cli`.
 
 ## Fast path
 

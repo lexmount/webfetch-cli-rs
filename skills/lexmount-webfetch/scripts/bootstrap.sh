@@ -5,8 +5,7 @@ version="${LEXMOUNT_WEBFETCH_CLI_VERSION:-0.1.0}"
 repo="https://github.com/lexmount/webfetch-cli-rs/releases/download/v${version}"
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) target="aarch64-apple-darwin" ;;
-  Darwin-x86_64) target="x86_64-apple-darwin" ;;
-  *) echo "Unsupported platform: $(uname -s) $(uname -m). This release supports macOS ARM64, macOS Intel x64, and Windows x64." >&2; exit 2 ;;
+  *) echo "Unsupported platform: $(uname -s) $(uname -m). This release supports macOS ARM64 and Windows x64." >&2; exit 2 ;;
 esac
 asset="webfetch-cli-v${version}-${target}"
 tmp_dir="$(mktemp -d)"

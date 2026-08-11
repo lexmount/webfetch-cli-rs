@@ -37,5 +37,5 @@ direct-upload SkillHub ZIP with:
 ```
 
 Tagged releases publish `lexmount-webfetch-v<VERSION>-skillhub.zip`,
-`SHA256SUMS`, and exactly three raw binaries: macOS ARM64, macOS Intel x64, and
-Windows x64. Linux is a CI host only and is not a release platform.
+`SHA256SUMS`, and exactly two raw binaries: macOS ARM64 and Windows x64. Linux
+and macOS Intel are not release platforms.
