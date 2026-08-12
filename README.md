@@ -1,8 +1,6 @@
 # Lexmount WebFetch CLI (Rust)
 
-Native Rust SDK and command-line client for Lexmount WebFetch. It mirrors the
-agent-facing Python `webfetch-cli` contract without requiring Python, `uv`, or
-Git at runtime.
+Native Rust SDK and command-line client for Lexmount WebFetch.
 
 ## Build
 
@@ -36,6 +34,16 @@ direct-upload SkillHub ZIP with:
 ./scripts/package-skill.sh
 ```
 
-Tagged releases publish `lexmount-webfetch-v<VERSION>-skillhub.zip`,
-`SHA256SUMS`, and exactly two raw binaries: macOS ARM64 and Windows x64. Linux
+The Skill ZIP contains `SKILL.md`, references, and platform bootstrap scripts;
+native executables are published separately. On first use, the matching script
+downloads the pinned release from Tencent Cloud COS and verifies its SHA-256
+digest. Tagged releases publish the Skill ZIP, `SHA256SUMS`, and exactly two
+standalone binaries: signed and notarized macOS ARM64 plus Windows x64. Linux
 and macOS Intel are not release platforms.
+
+The macOS signing job reads its certificate and notarization credentials from
+the `macos-release` GitHub environment. The publish job uploads both platform
+binaries to Tencent Cloud COS through the `cos-release` environment, using
+`TENCENT_CLOUD_SECRET_ID` and `TENCENT_CLOUD_SECRET_KEY` secrets plus
+`COS_BUCKET`, `COS_REGION`, `COS_PUBLIC_BASE_URL`, and `COS_OBJECT_PREFIX`
+variables.

@@ -1,8 +1,9 @@
 #!/bin/sh
 set -eu
 
-version="${LEXMOUNT_WEBFETCH_CLI_VERSION:-0.1.0}"
-repo="https://github.com/lexmount/webfetch-cli-rs/releases/download/v${version}"
+version="${LEXMOUNT_WEBFETCH_CLI_VERSION:-0.1.1}"
+download_base_url="${LEXMOUNT_WEBFETCH_CLI_DOWNLOAD_BASE_URL:-https://cli-bin-1377899528.cos.ap-nanjing.myqcloud.com/releases/webfetch-cli}"
+repo="${download_base_url%/}/v${version}"
 case "$(uname -s)-$(uname -m)" in
   Darwin-arm64) target="aarch64-apple-darwin" ;;
   *) echo "Unsupported platform: $(uname -s) $(uname -m). This release supports macOS ARM64 and Windows x64." >&2; exit 2 ;;
