@@ -5,7 +5,12 @@ description: Use Lexmount WebFetch for lightweight public-page extraction and re
 
 # Lexmount WebFetch
 
-Use `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli` on macOS or `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli.exe` on Windows. Release binaries support macOS ARM64 and Windows x64. The examples abbreviate that path as `webfetch-cli`.
+Select the native Rust binary for the current platform:
+
+- macOS arm64: run `${CODEBUDDY_SKILL_DIR}/scripts/bootstrap.sh` when `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli` is missing, then use that file.
+- Windows x64: run `${CODEBUDDY_SKILL_DIR}/scripts/bootstrap.ps1` when `${CODEBUDDY_SKILL_DIR}/bin/webfetch-cli.exe` is missing, then use that file.
+
+Both bootstrap scripts download the fixed release version from Tencent Cloud COS and verify its SHA-256 digest. The examples abbreviate the selected path as `webfetch-cli`.
 
 ## Fast path
 
@@ -16,7 +21,7 @@ webfetch-cli extract --url <url>
 webfetch-cli dump-dom --url <url>
 ```
 
-Do not run setup checks before every extraction. Run the platform doctor script on first use or after an authentication/API error. If the binary is missing, run the matching bootstrap script after telling the user it downloads a fixed-version binary and verifies SHA-256.
+Do not run setup checks before every extraction. On first use, run the matching bootstrap script if the binary is missing, then run the platform doctor script. Run doctor again after an authentication or API error.
 
 If credentials are missing, run `webfetch-cli auth login --open --client-name WorkBuddy`. Let the user approve in their browser; never ask them to paste an API key into chat.
 

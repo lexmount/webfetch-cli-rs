@@ -18,20 +18,45 @@ jobs:
       - run: cargo clippy --all-targets --locked -- -D warnings
       - name: Verify release target contract
         run: |
-          test "$(grep -c '^            target:' .github/workflows/release.yml)" -eq 2
           ! grep -q 'x86_64-unknown-linux' .github/workflows/release.yml
           ! grep -q 'x86_64-apple-darwin' .github/workflows/release.yml
           grep -q 'aarch64-apple-darwin' .github/workflows/release.yml
           grep -q 'x86_64-pc-windows-msvc' .github/workflows/release.yml
+          grep -q 'environment: macos-release' .github/workflows/release.yml
+          grep -q './scripts/sign_and_notarize_macos.sh' .github/workflows/release.yml
+          grep -q 'environment: cos-release' .github/workflows/release.yml
+          grep -q './scripts/upload-release-to-cos.sh cos-upload webfetch-cli' .github/workflows/release.yml
+          grep -q 'needs: \[build-macos, build-windows\]' .github/workflows/release.yml
+          ! grep -q 'skills/lexmount-webfetch/bin/' .github/workflows/release.yml
+      - run: bash -n scripts/sign_and_notarize_macos.sh scripts/upload-release-to-cos.sh
       - run: sh -n scripts/package-skill.sh skills/lexmount-webfetch/scripts/bootstrap.sh skills/lexmount-webfetch/scripts/doctor.sh
+      - name: Verify Skill platform selection and PATH isolation
+        run: |
+          test_dir="$(mktemp -d)"
+          trap 'rm -rf "$test_dir"' EXIT
+          mkdir -p "$test_dir/skill/scripts" "$test_dir/fake-path"
+          cp skills/lexmount-webfetch/scripts/doctor.sh "$test_dir/skill/scripts/doctor.sh"
+          ln -s /usr/bin/true "$test_dir/fake-path/webfetch-cli"
+          set +e
+          output="$(PATH="$test_dir/fake-path:/usr/bin:/bin" "$test_dir/skill/scripts/doctor.sh")"
+          status=$?
+          set -e
+          test "$status" -eq 2
+          test "$output" = '{"ok":false,"error":"unsupported_platform","message":"This Skill supports macOS arm64 through scripts/doctor.sh and Windows x64 through scripts/doctor.ps1."}'
+          ! grep -q 'command -v webfetch-cli' skills/lexmount-webfetch/scripts/doctor.sh
+          ! grep -q 'Get-Command webfetch-cli' skills/lexmount-webfetch/scripts/doctor.ps1
+      - name: Verify runtime packaging contract
+        run: |
+          ! grep -R -E 'python3[[:space:]]|python[[:space:]]+-m|uv[[:space:]]' scripts skills .github/workflows
+      - name: Stage excluded Skill package fixtures
+        run: |
+          mkdir -p skills/lexmount-webfetch/bin
+          printf 'macOS arm64 package fixture' > skills/lexmount-webfetch/bin/webfetch-cli
+          printf 'Windows x64 package fixture' > skills/lexmount-webfetch/bin/webfetch-cli.exe
       - run: ./scripts/package-skill.sh
-      - run: python3 -m zipfile --test dist/lexmount-webfetch.zip
+      - run: unzip -t dist/lexmount-webfetch.zip
       - name: Verify SkillHub ZIP root
         run: |
-          python3 - <<'PY'
-          import zipfile
-          with zipfile.ZipFile("dist/lexmount-webfetch.zip") as archive:
-              names = set(archive.namelist())
-          assert "SKILL.md" in names
-          assert not any(name.startswith("lexmount-webfetch/") for name in names)
-          PY
+          unzip -Z1 dist/lexmount-webfetch.zip | grep -qx 'SKILL.md'
+          ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^lexmount-webfetch/'
+          ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^bin/'
