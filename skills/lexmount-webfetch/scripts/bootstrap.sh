@@ -1,7 +1,7 @@
 #!/bin/sh
 set -eu
 
-version="${LEXMOUNT_WEBFETCH_CLI_VERSION:-0.1.1}"
+version="${LEXMOUNT_WEBFETCH_CLI_VERSION:-0.1.2}"
 download_base_url="${LEXMOUNT_WEBFETCH_CLI_DOWNLOAD_BASE_URL:-https://cli-bin-1377899528.cos.ap-nanjing.myqcloud.com/releases/webfetch-cli}"
 repo="${download_base_url%/}/v${version}"
 case "$(uname -s)-$(uname -m)" in
