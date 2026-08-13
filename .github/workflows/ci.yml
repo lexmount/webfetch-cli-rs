@@ -60,3 +60,15 @@ jobs:
           unzip -Z1 dist/lexmount-webfetch.zip | grep -qx 'SKILL.md'
           ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^lexmount-webfetch/'
           ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^bin/'
+
+  windows-bootstrap:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: Bootstrap from COS with Windows PowerShell 5.1
+        shell: powershell
+        run: |
+          if ($PSVersionTable.PSVersion.Major -ne 5) { throw "Expected Windows PowerShell 5.1" }
+          $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR = Join-Path $env:RUNNER_TEMP "webfetch-cli-bootstrap"
+          & .\skills\lexmount-webfetch\scripts\bootstrap.ps1
+          & (Join-Path $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR "webfetch-cli.exe") version
