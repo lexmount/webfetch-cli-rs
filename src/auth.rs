@@ -18,6 +18,7 @@ use url::Url;
 use crate::{Error, Result, client::DEFAULT_API_BASE_URL};
 
 pub const DEFAULT_CONNECT_BASE_URL: &str = "https://browser.lexmount.cn";
+pub const DEFAULT_CLIENT_NAME: &str = "Agent";
 pub const CONNECT_BASE_URL_ENV: &str = "LEXMOUNT_WEBFETCH_CONNECT_BASE_URL";
 pub const CREDENTIALS_FILE_ENV: &str = "LEXMOUNT_WEBFETCH_CREDENTIALS_FILE";
 pub const DEFAULT_SCOPES: &[&str] = &["browser:read"];
@@ -87,6 +88,32 @@ pub fn clear_credentials(path: Option<&Path>) -> Result<bool> {
     Ok(true)
 }
 
+fn build_login_url(
+    connect_base_url: &str,
+    redirect_uri: &str,
+    state: &str,
+    challenge: &str,
+    client_name: &str,
+) -> Result<Url> {
+    let connect_base_url = connect_base_url.trim_end_matches('/');
+    let mut login_url = Url::parse(&format!("{connect_base_url}/connect/codex"))
+        .map_err(|e| Error::Config(format!("invalid connect base URL: {e}")))?;
+    let client_name = if client_name.trim().is_empty() {
+        DEFAULT_CLIENT_NAME
+    } else {
+        client_name
+    };
+    login_url
+        .query_pairs_mut()
+        .append_pair("redirect_uri", redirect_uri)
+        .append_pair("state", state)
+        .append_pair("code_challenge", challenge)
+        .append_pair("code_challenge_method", "S256")
+        .append_pair("scope", &DEFAULT_SCOPES.join(" "))
+        .append_pair("client_name", client_name);
+    Ok(login_url)
+}
+
 pub fn login(
     connect_base_url: &str,
     client_name: &str,
@@ -104,16 +131,13 @@ pub fn login(
     let verifier = random_urlsafe(48);
     let challenge = URL_SAFE_NO_PAD.encode(Sha256::digest(verifier.as_bytes()));
     let state = random_urlsafe(24);
-    let mut login_url = Url::parse(&format!("{connect_base_url}/connect/codex"))
-        .map_err(|e| Error::Config(format!("invalid connect base URL: {e}")))?;
-    login_url
-        .query_pairs_mut()
-        .append_pair("redirect_uri", &redirect_uri)
-        .append_pair("state", &state)
-        .append_pair("code_challenge", &challenge)
-        .append_pair("code_challenge_method", "S256")
-        .append_pair("scope", &DEFAULT_SCOPES.join(" "))
-        .append_pair("client_name", client_name);
+    let login_url = build_login_url(
+        connect_base_url,
+        &redirect_uri,
+        &state,
+        &challenge,
+        client_name,
+    )?;
     if open_browser {
         open::that(login_url.as_str()).map_err(|e| Error::Io(std::io::Error::other(e)))?;
     }
@@ -272,6 +296,76 @@ mod tests {
             "http://webfetch.default.svc.cluster.local"
         ));
         assert!(!is_internal_api_base_url("https://api.lexmount.cn"));
+    }
+
+    #[test]
+    fn login_url_encodes_and_round_trips_client_name() {
+        let client_name = "Claude Code 中文 &/?/#/%/+";
+        let login_url = build_login_url(
+            "https://browser.lexmount.cn",
+            "http://127.0.0.1:12345/callback",
+            "state",
+            "challenge",
+            client_name,
+        )
+        .unwrap();
+
+        assert!(
+            login_url
+                .as_str()
+                .contains("client_name=Claude+Code+%E4%B8%AD%E6%96%87+%26%2F%3F%2F%23%2F%25%2F%2B")
+        );
+        assert_eq!(
+            login_url
+                .query_pairs()
+                .find(|(key, _)| key == "client_name")
+                .map(|(_, value)| value.into_owned()),
+            Some(client_name.to_owned())
+        );
+    }
+
+    #[test]
+    fn login_url_accepts_trailing_slashes_and_rejects_invalid_base_url() {
+        let login_url = build_login_url(
+            "https://browser.lexmount.cn///",
+            "http://127.0.0.1:12345/callback",
+            "state",
+            "challenge",
+            DEFAULT_CLIENT_NAME,
+        )
+        .unwrap();
+
+        assert_eq!(login_url.path(), "/connect/codex");
+        assert!(matches!(
+            build_login_url(
+                "not a URL",
+                "http://127.0.0.1:12345/callback",
+                "state",
+                "challenge",
+                DEFAULT_CLIENT_NAME,
+            ),
+            Err(Error::Config(message)) if message.starts_with("invalid connect base URL:")
+        ));
+    }
+
+    #[test]
+    fn login_url_uses_default_for_blank_client_name() {
+        let login_url = build_login_url(
+            DEFAULT_CONNECT_BASE_URL,
+            "http://127.0.0.1:12345/callback",
+            "state",
+            "challenge",
+            "  ",
+        )
+        .unwrap();
+
+        assert_eq!(
+            login_url
+                .query_pairs()
+                .find(|(key, _)| key == "client_name")
+                .map(|(_, value)| value.into_owned()),
+            Some(DEFAULT_CLIENT_NAME.to_owned())
+        );
     }
 
     #[test]

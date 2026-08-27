@@ -45,7 +45,7 @@ impl ClientBuilder {
             .filter(|v| !v.is_empty())
             .ok_or_else(|| {
                 Error::Config(format!(
-                    "Missing project id. Run webfetch-cli auth login or set {PROJECT_ID_ENV}."
+                    "Missing project id. Run the Skill-local CLI with `auth login --open` or set {PROJECT_ID_ENV}."
                 ))
             })?;
         let api_key = self
@@ -55,7 +55,7 @@ impl ClientBuilder {
             .filter(|v| !v.is_empty())
             .ok_or_else(|| {
                 Error::Config(format!(
-                    "Missing API key. Run webfetch-cli auth login or set {API_KEY_ENV}."
+                    "Missing API key. Run the Skill-local CLI with `auth login --open` or set {API_KEY_ENV}."
                 ))
             })?;
         let base_url = self

@@ -65,6 +65,16 @@ jobs:
           unzip -Z1 dist/lexmount-webfetch.zip | grep -qx 'SKILL.md'
           ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^lexmount-webfetch/'
           ! unzip -Z1 dist/lexmount-webfetch.zip | grep -q '^bin/'
+          expected_files="$(printf '%s\n' \
+            'SKILL.md' \
+            'references/authentication.md' \
+            'references/commands.md' \
+            'references/troubleshooting.md' \
+            'scripts/bootstrap.ps1' \
+            'scripts/bootstrap.sh' \
+            'scripts/doctor.ps1' \
+            'scripts/doctor.sh')"
+          test "$(unzip -Z1 dist/lexmount-webfetch.zip)" = "$expected_files"
 
   windows-bootstrap:
     runs-on: windows-latest
@@ -82,3 +92,29 @@ jobs:
           $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR = Join-Path $env:RUNNER_TEMP "webfetch-cli-bootstrap"
           & .\skills\lexmount-webfetch\scripts\bootstrap.ps1
           & (Join-Path $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR "webfetch-cli.exe") version
+
+  windows-release:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-pc-windows-msvc
+      - run: cargo test --locked --target x86_64-pc-windows-msvc
+      - run: cargo build --release --locked --target x86_64-pc-windows-msvc
+      - name: Verify standalone Windows executable
+        shell: powershell
+        run: |
+          $binary = "target/x86_64-pc-windows-msvc/release/webfetch-cli.exe"
+          & $binary version
+          if ($LASTEXITCODE -ne 0) { throw "webfetch-cli version failed with exit code $LASTEXITCODE" }
+
+          $vswhere = "${env:ProgramFiles(x86)}\Microsoft Visual Studio\Installer\vswhere.exe"
+          $installationPath = & $vswhere -latest -property installationPath
+          Import-Module "$installationPath\Common7\Tools\Microsoft.VisualStudio.DevShell.dll"
+          Enter-VsDevShell -VsInstallPath $installationPath -SkipAutomaticLocation
+          $dependencies = & dumpbin.exe /dependents $binary
+          $dependencies | Write-Output
+          if ($dependencies -match '(?im)^\s+(?:VCRUNTIME|MSVCP)\d*[^\s]*\.dll\s*$') {
+            throw "Windows release dynamically depends on the Visual C++ Redistributable"
+          }
