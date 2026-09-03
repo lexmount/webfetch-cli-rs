@@ -1,7 +1,7 @@
 # Command reference
 
-Resolve `<skill-root>` from the loaded `SKILL.md`. On macOS, `<webfetch-cli>`
-below means `"<skill-root>/bin/webfetch-cli"`; on Windows PowerShell it means
+Resolve `<skill-root>` from the loaded `SKILL.md`. On macOS and Linux,
+`<webfetch-cli>` below means `"<skill-root>/bin/webfetch-cli"`; on Windows PowerShell it means
 `& "<skill-root>\bin\webfetch-cli.exe"`. These are Skill-local absolute
 invocations, not `PATH` lookups.
 

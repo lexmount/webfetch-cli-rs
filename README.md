@@ -46,7 +46,7 @@ Claude Code uses `${CLAUDE_SKILL_DIR}`, and WorkBuddy/CodeBuddy uses
 the Skill directory from their own path.
 
 The ZIP contains exactly eight files: `SKILL.md`, three references, and the
-bootstrap/doctor scripts for both platforms. Native executables are published
+bootstrap/doctor scripts for all supported platforms. Native executables are published
 separately. On first use, the matching script downloads the pinned release from
 Tencent Cloud COS and verifies its SHA-256 digest. Tagged releases publish the
 Skill ZIP, `SHA256SUMS`, and exactly three standalone binaries: signed and
