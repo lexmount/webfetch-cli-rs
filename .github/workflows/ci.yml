@@ -18,7 +18,7 @@ jobs:
       - run: cargo clippy --all-targets --locked -- -D warnings
       - name: Verify release target contract
         run: |
-          ! grep -q 'x86_64-unknown-linux' .github/workflows/release.yml
+          grep -q 'x86_64-unknown-linux-musl' .github/workflows/release.yml
           ! grep -q 'x86_64-apple-darwin' .github/workflows/release.yml
           grep -q 'aarch64-apple-darwin' .github/workflows/release.yml
           grep -q 'x86_64-pc-windows-msvc' .github/workflows/release.yml
@@ -26,7 +26,7 @@ jobs:
           grep -q './scripts/sign_and_notarize_macos.sh' .github/workflows/release.yml
           grep -q 'environment: cos-release' .github/workflows/release.yml
           grep -q './scripts/upload-release-to-cos.sh cos-upload webfetch-cli' .github/workflows/release.yml
-          grep -q 'needs: \[build-macos, build-windows\]' .github/workflows/release.yml
+          grep -q 'needs: \[build-linux, build-macos, build-windows\]' .github/workflows/release.yml
           ! grep -q 'skills/lexmount-webfetch/bin/' .github/workflows/release.yml
       - run: bash -n scripts/sign_and_notarize_macos.sh scripts/upload-release-to-cos.sh
       - run: sh -n scripts/package-skill.sh skills/lexmount-webfetch/scripts/bootstrap.sh skills/lexmount-webfetch/scripts/doctor.sh
@@ -92,6 +92,25 @@ jobs:
           $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR = Join-Path $env:RUNNER_TEMP "webfetch-cli-bootstrap"
           & .\skills\lexmount-webfetch\scripts\bootstrap.ps1
           & (Join-Path $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR "webfetch-cli.exe") version
+
+  linux-release:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v5
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: x86_64-unknown-linux-musl
+      - run: sudo apt-get update && sudo apt-get install --yes musl-tools
+      - name: Build static Linux binary
+        run: cargo build --release --locked --target x86_64-unknown-linux-musl
+      - name: Verify standalone Linux executable
+        run: |
+          binary="target/x86_64-unknown-linux-musl/release/webfetch-cli"
+          if readelf --program-headers --wide "$binary" | grep -F 'Requesting program interpreter'; then
+            echo 'Linux release binary is dynamically linked' >&2
+            exit 1
+          fi
+          "$binary" version
 
   windows-release:
     runs-on: windows-latest

@@ -49,12 +49,12 @@ The ZIP contains exactly eight files: `SKILL.md`, three references, and the
 bootstrap/doctor scripts for both platforms. Native executables are published
 separately. On first use, the matching script downloads the pinned release from
 Tencent Cloud COS and verifies its SHA-256 digest. Tagged releases publish the
-Skill ZIP, `SHA256SUMS`, and exactly two standalone binaries: signed and
-notarized macOS ARM64 plus Windows x64. Linux and macOS Intel are not release
-platforms.
+Skill ZIP, `SHA256SUMS`, and exactly three standalone binaries: signed and
+notarized macOS ARM64, static Linux x64, and Windows x64. macOS Intel is not a
+release platform.
 
 The macOS signing job reads its certificate and notarization credentials from
-the `macos-release` GitHub environment. The publish job uploads both platform
+the `macos-release` GitHub environment. The publish job uploads all three platform
 binaries to Tencent Cloud COS through the `cos-release` environment, using
 `TENCENT_CLOUD_SECRET_ID` and `TENCENT_CLOUD_SECRET_KEY` secrets plus
 `COS_BUCKET`, `COS_REGION`, `COS_PUBLIC_BASE_URL`, and `COS_OBJECT_PREFIX`
