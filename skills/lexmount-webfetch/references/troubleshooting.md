@@ -6,9 +6,9 @@
    WorkBuddy/CodeBuddy provides `${CODEBUDDY_SKILL_DIR}`. Do not infer it from
    the working directory or search the user's home directory.
 2. Missing command: run `sh "<skill-root>/scripts/bootstrap.sh"` on macOS arm64
-   or `& "<skill-root>\scripts\bootstrap.ps1"` on Windows x64, then run the
-   matching doctor script. Invoke only the Skill-local binary afterward; do not
-   rely on `PATH`.
+   or Linux x64, or `& "<skill-root>\scripts\bootstrap.ps1"` on Windows x64,
+   then run the matching doctor script. Invoke only the Skill-local binary
+   afterward; do not rely on `PATH`.
 3. Missing or expired credentials: run the Skill-local CLI's
    `auth login --open`. Pass `--client-name "<agent-name>"` when the current
    Agent has a user-facing name; otherwise omit it to use `Agent`.

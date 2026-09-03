@@ -17,6 +17,7 @@ Do not infer `<skill-root>` from the working directory.
 Select the native Rust binary for the current platform:
 
 - macOS arm64: run `sh "<skill-root>/scripts/bootstrap.sh"` when `<skill-root>/bin/webfetch-cli` is missing, then invoke `"<skill-root>/bin/webfetch-cli"`.
+- Linux x64: run `sh "<skill-root>/scripts/bootstrap.sh"` when `<skill-root>/bin/webfetch-cli` is missing, then invoke `"<skill-root>/bin/webfetch-cli"`.
 - Windows x64: run `& "<skill-root>\scripts\bootstrap.ps1"` in PowerShell when `<skill-root>\bin\webfetch-cli.exe` is missing, then invoke `& "<skill-root>\bin\webfetch-cli.exe"`.
 
 Both bootstrap scripts download the fixed release version from Tencent Cloud COS
@@ -29,7 +30,7 @@ Do not run the binary for the other platform or assume `webfetch-cli` is on `PAT
 ## Setup
 
 1. Resolve `<skill-root>` from this `SKILL.md` and select the matching platform paths above.
-2. Run the Skill-local bootstrap script if the binary is missing. Then run `sh "<skill-root>/scripts/doctor.sh"` on macOS arm64 or `& "<skill-root>\scripts\doctor.ps1"` in Windows PowerShell.
+2. Run the Skill-local bootstrap script if the binary is missing. Then run `sh "<skill-root>/scripts/doctor.sh"` on macOS arm64 or Linux x64, or `& "<skill-root>\scripts\doctor.ps1"` in Windows PowerShell.
 3. If credentials are missing, run the Skill-local CLI's `auth login --open`.
    Pass `--client-name "<agent-name>"` when the current Agent has a user-facing
    name; otherwise omit it and the CLI uses `Agent`. Let the user approve in
