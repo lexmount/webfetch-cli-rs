@@ -29,7 +29,7 @@ jobs:
           grep -q 'needs: \[build-linux, build-macos, build-windows\]' .github/workflows/release.yml
           ! grep -q 'skills/lexmount-webfetch/bin/' .github/workflows/release.yml
       - run: bash -n scripts/sign_and_notarize_macos.sh scripts/upload-release-to-cos.sh
-      - run: sh -n scripts/package-skill.sh skills/lexmount-webfetch/scripts/bootstrap.sh skills/lexmount-webfetch/scripts/doctor.sh
+      - run: sh -n scripts/package-skill.sh scripts/package-cli-connector.sh skills/lexmount-webfetch/scripts/bootstrap.sh skills/lexmount-webfetch/scripts/doctor.sh cli-connector/scripts/install.sh
       - name: Verify Skill bootstrap version
         run: |
           package_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
@@ -49,9 +49,41 @@ jobs:
           grep -Fq 'Linux-x86_64) target="x86_64-unknown-linux-musl"' skills/lexmount-webfetch/scripts/bootstrap.sh
           ! grep -q 'command -v webfetch-cli' skills/lexmount-webfetch/scripts/doctor.sh
           ! grep -q 'Get-Command webfetch-cli' skills/lexmount-webfetch/scripts/doctor.ps1
+      - name: Verify WorkBuddy Connector contract
+        run: |
+          package_version="$(sed -n 's/^version = "\([^"]*\)"/\1/p' Cargo.toml | head -n 1)"
+          jq -e '
+            .type == "cli" and
+            .source == "lexmount-webfetch" and
+            .version == "0.1.0" and
+            .minWorkbuddyVersion == "5.0.0" and
+            (.examples_zh | length >= 2 and length <= 5) and
+            (.examples_en | length >= 2 and length <= 5)
+          ' cli-connector/connector-meta.json
+          jq -e --arg version "$package_version" '
+            . as $config |
+            .versionCheck.minVersion == $version and
+            .statusMatchJson.authenticated == "true" and
+            .authUrlDomain == "browser.lexmount.cn" and
+            (["darwin", "linux", "win32"] | all(
+              . as $platform |
+              ($config.init[$platform] | type == "string" and length > 0) and
+              ($config.auth[$platform] | type == "string" and length > 0) and
+              ($config.unAuth[$platform] | type == "string" and length > 0) and
+              ($config.status[$platform] | type == "string" and length > 0) and
+              ($config.versionCheck.command[$platform] | type == "string" and length > 0)
+            ))
+          ' cli-connector/cli.json
+          grep -Fq "LEXMOUNT_WEBFETCH_CLI_VERSION:-${package_version}" cli-connector/scripts/install.sh
+          grep -Fq "else { \"${package_version}\" }" cli-connector/scripts/install.ps1
+          grep -Fq 'version: 0.1.0' cli-connector/skills/lexmount-webfetch/SKILL.md
+          grep -Fq 'description_zh:' cli-connector/skills/lexmount-webfetch/SKILL.md
+          grep -Fq 'description_en:' cli-connector/skills/lexmount-webfetch/SKILL.md
+          grep -Fq 'author: Lexmount' cli-connector/skills/lexmount-webfetch/SKILL.md
+          grep -Fq 'Linux-x86_64) target="x86_64-unknown-linux-musl"' cli-connector/scripts/install.sh
       - name: Verify runtime packaging contract
         run: |
-          ! grep -R -E 'python3[[:space:]]|python[[:space:]]+-m|uv[[:space:]]' scripts skills .github/workflows
+          ! grep -R -E 'python3[[:space:]]|python[[:space:]]+-m|uv[[:space:]]' scripts skills cli-connector .github/workflows
       - name: Stage excluded Skill package fixtures
         run: |
           mkdir -p skills/lexmount-webfetch/bin
@@ -74,6 +106,33 @@ jobs:
             'scripts/doctor.ps1' \
             'scripts/doctor.sh')"
           test "$(unzip -Z1 dist/lexmount-webfetch.zip)" = "$expected_files"
+      - run: ./scripts/package-cli-connector.sh
+      - run: unzip -t dist/lexmount-webfetch-cli-connector.zip
+      - name: Verify WorkBuddy Connector ZIP root
+        run: |
+          unzip -Z1 dist/lexmount-webfetch-cli-connector.zip | grep -qx 'connector-meta.json'
+          unzip -Z1 dist/lexmount-webfetch-cli-connector.zip | grep -qx 'cli.json'
+          unzip -Z1 dist/lexmount-webfetch-cli-connector.zip | grep -qx 'icon.svg'
+          if unzip -Z1 dist/lexmount-webfetch-cli-connector.zip | grep -q '^cli-connector/'; then
+            echo 'Connector ZIP must not contain an outer cli-connector directory' >&2
+            exit 1
+          fi
+          if unzip -Z1 dist/lexmount-webfetch-cli-connector.zip | grep -q '/bin/'; then
+            echo 'Connector ZIP must not contain native binaries' >&2
+            exit 1
+          fi
+          expected_files="$(printf '%s\n' \
+            'README.md' \
+            'cli.json' \
+            'connector-meta.json' \
+            'icon.svg' \
+            'scripts/install.ps1' \
+            'scripts/install.sh' \
+            'skills/lexmount-webfetch/SKILL.md' \
+            'skills/lexmount-webfetch/references/authentication.md' \
+            'skills/lexmount-webfetch/references/commands.md' \
+            'skills/lexmount-webfetch/references/troubleshooting.md')"
+          test "$(unzip -Z1 dist/lexmount-webfetch-cli-connector.zip)" = "$expected_files"
 
   windows-bootstrap:
     runs-on: windows-latest
@@ -91,6 +150,9 @@ jobs:
           $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR = Join-Path $env:RUNNER_TEMP "webfetch-cli-bootstrap"
           & .\skills\lexmount-webfetch\scripts\bootstrap.ps1
           & (Join-Path $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR "webfetch-cli.exe") version
+          $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR = Join-Path $env:RUNNER_TEMP "webfetch-cli-connector"
+          & .\cli-connector\scripts\install.ps1
+          & (Join-Path $env:LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR "webfetch-cli.exe") version
 
   linux-bootstrap:
     runs-on: ubuntu-latest
@@ -105,6 +167,9 @@ jobs:
           export LEXMOUNT_WEBFETCH_CLI_VERSION="${latest_tag#v}"
           export LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR="$RUNNER_TEMP/webfetch-cli-bootstrap"
           ./skills/lexmount-webfetch/scripts/bootstrap.sh
+          "$LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR/webfetch-cli" version
+          export LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR="$RUNNER_TEMP/webfetch-cli-connector"
+          ./cli-connector/scripts/install.sh
           "$LEXMOUNT_WEBFETCH_CLI_INSTALL_DIR/webfetch-cli" version
 
   linux-release:

@@ -1,0 +1,36 @@
+{
+  "init": {
+    "darwin": "sh \"./scripts/install.sh\"",
+    "linux": "sh \"./scripts/install.sh\"",
+    "win32": "powershell -NoProfile -ExecutionPolicy Bypass -File \".\\scripts\\install.ps1\""
+  },
+  "versionCheck": {
+    "command": {
+      "darwin": "\"$HOME/.lexmount/bin/webfetch-cli\" version",
+      "linux": "\"$HOME/.lexmount/bin/webfetch-cli\" version",
+      "win32": "\"%USERPROFILE%\\.lexmount\\bin\\webfetch-cli.exe\" version"
+    },
+    "minVersion": "0.1.5",
+    "versionPattern": "(\\d+\\.\\d+\\.\\d+)"
+  },
+  "auth": {
+    "darwin": "\"$HOME/.lexmount/bin/webfetch-cli\" auth login --open --client-name WorkBuddy",
+    "linux": "\"$HOME/.lexmount/bin/webfetch-cli\" auth login --open --client-name WorkBuddy",
+    "win32": "\"%USERPROFILE%\\.lexmount\\bin\\webfetch-cli.exe\" auth login --open --client-name WorkBuddy"
+  },
+  "unAuth": {
+    "darwin": "\"$HOME/.lexmount/bin/webfetch-cli\" auth clear-credentials",
+    "linux": "\"$HOME/.lexmount/bin/webfetch-cli\" auth clear-credentials",
+    "win32": "\"%USERPROFILE%\\.lexmount\\bin\\webfetch-cli.exe\" auth clear-credentials"
+  },
+  "status": {
+    "darwin": "\"$HOME/.lexmount/bin/webfetch-cli\" auth status",
+    "linux": "\"$HOME/.lexmount/bin/webfetch-cli\" auth status",
+    "win32": "\"%USERPROFILE%\\.lexmount\\bin\\webfetch-cli.exe\" auth status"
+  },
+  "statusMatch": "\"authenticated\"\\s*:\\s*true",
+  "statusMatchJson": {
+    "authenticated": "true"
+  },
+  "authUrlDomain": "browser.lexmount.cn"
+}

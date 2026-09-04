@@ -1,0 +1,22 @@
+{
+  "name": "Lexmount 网页提取",
+  "name_zh": "Lexmount 网页提取",
+  "name_en": "Lexmount WebFetch",
+  "description": "通过自然语言提取公开网页正文、结构化内容和渲染后的 DOM。",
+  "description_zh": "通过自然语言提取公开网页正文、结构化内容和渲染后的 DOM。",
+  "description_en": "Extract readable content, structured text, and rendered DOMs from public webpages.",
+  "source": "lexmount-webfetch",
+  "type": "cli",
+  "version": "0.1.0",
+  "examples_zh": [
+    "提取这个网页的正文并总结重点",
+    "获取这个 JavaScript 网页渲染后的 DOM",
+    "以 JSON 格式提取这个链接的结构化内容"
+  ],
+  "examples_en": [
+    "Extract the main content from this webpage and summarize it",
+    "Get the rendered DOM for this JavaScript webpage",
+    "Extract structured content from this URL as JSON"
+  ],
+  "minWorkbuddyVersion": "5.0.0"
+}

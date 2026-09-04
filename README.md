@@ -59,3 +59,20 @@ binaries to Tencent Cloud COS through the `cos-release` environment, using
 `TENCENT_CLOUD_SECRET_ID` and `TENCENT_CLOUD_SECRET_KEY` secrets plus
 `COS_BUCKET`, `COS_REGION`, `COS_PUBLIC_BASE_URL`, and `COS_OBJECT_PREFIX`
 variables.
+
+## WorkBuddy CLI Connector
+
+The publishable WorkBuddy CLI + Skill Connector is in `cli-connector`. It uses
+the same signed/checksummed v0.1.5 release assets, installs the native executable
+under the user's `.lexmount/bin` directory, and lets WorkBuddy manage login,
+status checks, and disconnection through `cli.json`.
+
+Build its deterministic submission ZIP with:
+
+```bash
+./scripts/package-cli-connector.sh
+```
+
+The generated `dist/lexmount-webfetch-cli-connector.zip` has the Connector
+metadata, CLI lifecycle config, icon, installer scripts, and WorkBuddy-specific
+Skill at the archive root.
